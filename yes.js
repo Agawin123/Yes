@@ -383,9 +383,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         ctx.fillStyle = "lime"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.fillText(`WAVE: ${wave}   LVL: ${player.level}`, 20, 25);
-        ctx.fillStyle = "#333"; ctx.fillRect(20, 35, 200, 12); ctx.fillStyle = godMode ? "#00ffff" : "#ff0066"; ctx.fillRect(20, 35, 200 * (player.hp / player.maxHp), 12);
-        ctx.fillStyle = "#333"; ctx.fillRect(20, 52, 200, 6); ctx.fillStyle = "cyan"; ctx.fillRect(20, 52, 200 * (player.exp / player.nextExp), 6);
     }
 
     function applyUpgrade(upg) { upg.f(); playerInventory[upg.t] = (playerInventory[upg.t] || 0) + 1; }
