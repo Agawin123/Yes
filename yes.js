@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function update(t) {
         if (godMode) player.hp = player.maxHp;
         let vx = 0, vy = 0;
-        if (keys["w"]) vy -= 1; if (keys["s"]) vy += 1; if (keys["a"]) vx -= 1; if (keys["d"]) vx += 1;
+        if (keys["w"] || keys["arrowup"]) vy -= 1; if (keys["s"] || keys["arrowdown"]) vy += 1; if (keys["a"] || keys["arrowleft"]) vx -= 1; if (keys["d"] || keys["arrowright"]) vx += 1;
         if (vx !== 0 || vy !== 0) { const length = Math.sqrt(vx * vx + vy * vy); player.x += (vx / length) * player.speed; player.y += (vy / length) * player.speed; }
         if (keys[" "] && player.dashAbility && player.dashCD <= 0) { useDash(); player.dashCD = player.dashMaxCD; }
         if (player.dashCD > 0) player.dashCD -= 16.6;
