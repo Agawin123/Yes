@@ -164,6 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    let lastHp = player.maxHp;
+    
     function updateHUD() {
         // Update stats text
         document.getElementById("stats").innerText = `WAVE: ${wave} | LVL: ${player.level}`;
@@ -171,6 +173,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update HP bar
         const hpPct = (player.hp / player.maxHp) * 100;
         document.getElementById("hpFill").style.width = hpPct + "%";
+        
+        // Flash effect when taking damage
+        if (player.hp < lastHp) {
+            const hudEl = document.getElementById("hud");
+            hudEl.classList.remove("damaged");
+            void hudEl.offsetWidth; // Trigger reflow to restart animation
+            hudEl.classList.add("damaged");
+        }
+        lastHp = player.hp;
         
         // Update EXP bar
         const expPct = (player.exp / player.nextExp) * 100;
