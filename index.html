@@ -1,344 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Private Chat</title>
-<style>
-:root {
-  --bg: #031b36;
-  --card: #082a52;
-  --text: #cce6ff;
-  --bubble: #0a336b;
-  --bubble-2: #0e4a91;
-}
-body {
-  font-family: Arial;
-  background-color: var(--bg);
-  color: var(--text);
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  height:100vh;
-  overflow:hidden;
-}
-#loginContainer, #chatContainer, #dmContainer {
-  background-color: var(--card);
-  border-radius:16px;
-  box-shadow:0 0 15px #0b68d8;
-  padding:20px;
-  width:80%;
-  max-width:600px;
-  margin-top:40px;
-}
-input, button, select {
-  padding:8px;
-  border-radius:8px;
-  border:none;
-  margin:5px;
-}
-button {
-  background-color:#007bff;
-  color:white;
-  cursor:pointer;
-}
-button:hover {
-  background-color:#00aaff;
-}
-#messages {
-  height:300px;
-  overflow-y:auto;
-  border:1px solid #0852a3;
-  padding:10px;
-  margin-bottom:10px;
-  background-color:#041a35;
-  border-radius:10px;
-}
-.message {
-  margin:5px 0;
-}
-.bubble {
-  background: linear-gradient(180deg,var(--bubble),var(--bubble-2));
-  padding:10px;
-  border-radius:10px;
-  max-width:45%;
-  box-shadow:0 6px 18px rgba(3,27,54,0.5);
-  color: var(--text);
-  border:1px solid rgba(11,104,216,0.06);
-  word-wrap:break-word;
-  margin-top:3px;
-}
-#onlineUsers {
-  position:absolute;
-  top:10px;
-  right:10px;
-  background: var(--bubble);
-  padding:10px;
-  border-radius:10px;
-  color:#aaccff;
-  font-size:14px;
-}
-#channels {
-  position:absolute;
-  top:60px;
-  right:10px;
-  background: var(--bubble);
-  padding:10px;
-  border-radius:10px;
-  color:#aaccff;
-  font-size:14px;
-  max-height:60vh;
-  overflow-y:auto;
-}
-.channelBtn {
-  display:block;
-  background-color: var(--bubble);
-  color: var(--text);
-  border-radius:8px;
-  margin:3px 0;
-  padding:5px;
-  cursor:pointer;
-}
-.channelBtn:hover {
-  background-color: var(--bubble-2);
-}
-img.chatImage {
-  max-width:150px;
-  border-radius:8px;
-  margin-top:5px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Survivor - Elementalist</title>
+    <style>
+        /* ================= CSS ================= */
+        html, body {
+            margin: 0; padding: 0; overflow: hidden;
+            background: #111; color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        canvas { display: block; }
+
+        .overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 100; text-align: center;
+        }
+        .hidden { display: none !important; }
+
+        .menu-box {
+            background: #222; padding: 40px;
+            border-radius: 20px; border: 2px solid #444;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        button {
+            padding: 12px 30px; font-size: 18px; font-weight: bold;
+            background: #ff0066; color: white; border: none;
+            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+        }
+        button:hover { background: #ff3385; transform: translateY(-2px); }
+
+        /* HUD & Progress Bars */
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+        .bar-bg {
+            width: 200px; height: 12px; background: #333;
+            margin-bottom: 8px; border-radius: 6px; overflow: hidden; border: 1px solid #555;
+        }
+        .bar-fill { height: 100%; transition: width 0.3s ease-out; }
+
+        /* Ability HUD */
+        #cooldownHUD { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 12px; z-index: 10; }
+        .cd-item {
+            background: rgba(20, 20, 20, 0.9); padding: 10px;
+            border-radius: 10px; border-bottom: 4px solid; min-width: 120px;
+        }
+        .cd-bar-bg { width: 100%; height: 4px; background: #333; margin-top: 6px; }
+        .cd-bar-fill { height: 100%; background: #fff; }
+
+        /* Level Up Cards */
+        .levelUpContainer { display: flex; gap: 20px; margin-top: 20px; }
+        .upgradeCard {
+            width: 220px; height: 300px; padding: 20px; border-radius: 16px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column; align-items: center; border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .upgradeCard:hover { transform: translateY(-15px); border-color: white; }
+
+        /* Rarity Themes */
+        .common { background: #2a2a2a; }
+        .rare { background: #1a2a4a; border-color: #3366ff; }
+        .epic { background: #3a1a4a; border-color: #9933ff; }
+        .legendary { background: #4a3a1a; border-color: #ffcc00; }
+        .mythic { background: #4a1a1a; border-color: #ff3300; }
+
+        /* Inventory (Pause Menu) */
+        #inventoryList { margin: 20px 0; text-align: left; max-height: 200px; overflow-y: auto; width: 100%; }
+        .inventory-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #333; }
+
+        /* Dev Menu */
+        #devMenu {
+            position: fixed; top: 20px; right: 20px; background: #222;
+            padding: 15px; border-radius: 12px; border: 1px solid #ff0066;
+            width: 260px; max-height: 80vh; overflow-y: auto; display: none; z-index: 1000;
+        }
+        .cheatBtn { width: 100%; margin-bottom: 6px; font-size: 12px; padding: 8px; }
+        .rarityHeader { color: #666; font-size: 11px; margin: 10px 0 5px; border-bottom: 1px solid #333; }
+    </style>
 </head>
 <body>
 
-<div id="onlineUsers">Online: Loading...</div>
-<div id="channels">Channels:<div id="dmListContainer"></div></div>
+    <canvas id="game"></canvas>
 
-<div id="loginContainer">
-  <h2>Login or Create Account</h2>
-  <input id="username" placeholder="Username"><br>
-  <input id="password" type="password" placeholder="Password"><br>
-  <button onclick="createAccount()">Create Account</button>
-  <button onclick="login()">Login</button>
-  <p id="loginMsg"></p>
-</div>
+    <div id="hud">
+        <div id="stats" style="font-size: 18px; margin-bottom: 5px;">WAVE: 1 | LVL: 1</div>
+        <div class="bar-bg"><div id="hpFill" class="bar-fill" style="background: #ff0066; width: 100%;"></div></div>
+        <div class="bar-bg"><div id="expFill" class="bar-fill" style="background: #00ccff; width: 0%;"></div></div>
+    </div>
 
-<div id="chatContainer" style="display:none;">
-  <h2 id="welcome"></h2>
-  <div id="messages"></div>
-  <input id="msgInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()">
-  <button onclick="sendMessage()">Send</button>
-  <button onclick="document.getElementById('imageInput').click()">📷</button>
-  <input type="file" id="imageInput" accept="image/*" style="display:none">
-  <p id="statusMsg"></p>
-</div>
+    <div id="bossUI" style="display:none; position: fixed; top: 20px; width: 100%; text-align: center; z-index: 10;">
+        <div style="color: #ffaa00; font-weight: bold; margin-bottom: 5px;">ELITE DETECTED</div>
+        <div class="bar-bg" style="width: 50%; height: 16px; margin: 0 auto;">
+            <div id="bossBarFill" class="bar-fill" style="background: #ff4400; width: 100%;"></div>
+        </div>
+    </div>
 
-<script>
-const BASE_URL = "https://script.google.com/macros/s/AKfycbywhKqysxY6aGRfNNqIHW3C3ZaEoq7F0mLqOBVdjwi2YZcJkL6bJ-iokAel0L1dLLMN/exec"; // replace with the URL from redeploy
+    <div id="cooldownHUD"></div>
 
-let currentUser = "";
-let currentChannel = "Main";
-let approved = false;
-let messagePollTimeout = null;
+    <div id="overlay" class="overlay">
+        <div class="menu-box">
+            <h1 style="font-size: 48px; color: #ff0066;">CIRCLE SURVIVOR</h1>
+            <p style="color: #888; margin-bottom: 30px;">WASD: Move | Mouse: Aim | Space: Dash | Esc: Pause</p>
+            <button id="startBtn">INITIALIZE</button>
+        </div>
+    </div>
 
-// ===== ACCOUNT LOGIC =====
-async function createAccount() {
-  const user = username.value.trim();
-  const pass = password.value.trim();
-  if (!user || !pass) return loginMsg.textContent = "Enter username & password.";
+    <div id="levelUpOverlay" class="overlay hidden">
+        <h2 style="color: #00ccff; margin-bottom: 20px;">SYSTEM UPGRADE</h2>
+        <div id="upgradeContainer" class="levelUpContainer"></div>
+    </div>
 
-  try {
-    const res = await fetch(`${BASE_URL}?action=createAccount&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
-    const text = await res.text();
-    loginMsg.textContent = text;
-  } catch(err) {
-    console.error(err);
-    loginMsg.textContent = "Error connecting to server.";
-  }
-}
+    <div id="pauseOverlay" class="overlay hidden">
+        <div class="menu-box" style="width: 300px;">
+            <h2 style="color: #ffaa00;">PAUSED</h2>
+            <div id="inventoryList"></div>
+            <button id="resumeBtn">RESUME</button>
+        </div>
+    </div>
 
-async function login() {
-  const user = username.value.trim();
-  const pass = password.value.trim();
-  if (!user || !pass) return loginMsg.textContent = "Enter username & password.";
+    <div id="deathOverlay" class="overlay hidden">
+        <div class="menu-box">
+            <h1 style="color: #ff0066;">SYSTEM FAILURE</h1>
+            <p id="deathStats" style="font-size: 20px; margin-bottom: 30px;"></p>
+            <button onclick="location.reload()">REBOOT</button>
+        </div>
+    </div>
 
-  try {
-    const res = await fetch(`${BASE_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
-    const text = await res.text();
+    <div id="devMenu">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="color: #ff0066; margin: 0; font-size: 14px;">CONSOLE OVERRIDE</h3>
+            <button id="closeDev" style="padding: 2px 8px; font-size: 10px; background: #444;">X</button>
+        </div>
+        <button class="cheatBtn" id="cheatLevel">EXP MAX</button>
+        <button class="cheatBtn" id="cheatHeal">REPAIR HP</button>
+        <button class="cheatBtn" id="cheatSkip">CLEAR WAVE</button>
+        <button class="cheatBtn" id="cheatAll">UNLOCK ALL</button>
+        <div id="upgradeInjectionList"></div>
+    </div>
 
-    if(text === "Login success") {
-      currentUser = user;
-      approved = true;
-      startChat();
-    } else {
-      loginMsg.textContent = text;
-    }
-  } catch(err) {
-    console.error(err);
-    loginMsg.textContent = "Error connecting to server.";
-  }
-}
-
-// ===== CHAT START =====
-function startChat() {
-  loginContainer.style.display = "none";
-  chatContainer.style.display = "block";
-  welcome.textContent = "Logged in as " + currentUser;
-  loadUsers();
-  loadChannels();
-  startMessagePolling();
-  startUserPolling();
-}
-
-// ===== POLLING HELPERS =====
-function startMessagePolling() {
-  if(messagePollTimeout) clearTimeout(messagePollTimeout);
-  const poll = async () => {
-    await loadMessages();
-    messagePollTimeout = setTimeout(poll, 3000);
-  };
-  poll();
-}
-
-function startUserPolling() {
-  setInterval(loadUsers, 5000);
-}
-
-// ===== LOAD USERS =====
-async function loadUsers() {
-  if(!approved) return;
-  try {
-    const res = await fetch(`${BASE_URL}?action=getUsers`);
-    const online = await res.json();
-    onlineUsers.textContent = "Online: "+(online.length ? online.join(", ") : "None");
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-// ===== LOAD CHANNELS =====
-async function loadChannels() {
-  if(!approved) return;
-  try {
-    const usersRes = await fetch(`${BASE_URL}?action=getUsers`);
-    const users = await usersRes.json();
-    const container = document.getElementById("dmListContainer");
-    container.innerHTML = "";
-    users.forEach(u => {
-      if(u !== currentUser){
-        const btn = document.createElement("div");
-        btn.className = "channelBtn";
-        btn.textContent = "#" + u;
-        btn.onclick = () => openDM(u);
-        container.appendChild(btn);
-      }
-    });
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-// ===== OPEN DM =====
-async function openDM(otherUser){
-  const dmChannel = [currentUser, otherUser].sort().join("_DM_");
-  await fetch(`${BASE_URL}?action=createDMChannel&user1=${encodeURIComponent(currentUser)}&user2=${encodeURIComponent(otherUser)}`);
-  currentChannel = dmChannel;
-  await loadMessages();
-  startMessagePolling();
-}
-
-// ===== LOAD MESSAGES =====
-async function loadMessages(){
-  if(!approved) return;
-  try {
-    const res = await fetch(`${BASE_URL}?action=getMessages&channel=${encodeURIComponent(currentChannel)}`);
-    const data = await res.json();
-    const atBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 50;
-    messages.innerHTML = "";
-
-    data.forEach(d => {
-      const div = document.createElement("div");
-      div.className = "message";
-
-      const info = document.createElement("div");
-      info.textContent = `${d.time} ${d.sender}`;
-      div.appendChild(info);
-
-      if(d.message){
-        const msg = document.createElement("div");
-        msg.className = "bubble";
-        msg.textContent = d.message;
-        div.appendChild(msg);
-      }
-      if(d.imageUrl){
-        const img = document.createElement("img");
-        img.className = "chatImage";
-        img.src = d.imageUrl;
-        div.appendChild(img);
-      }
-
-      messages.appendChild(div);
-    });
-
-    if(atBottom) messages.scrollTop = messages.scrollHeight;
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-// ===== SEND MESSAGE =====
-async function sendMessage(){
-  const msg = msgInput.value.trim();
-  if(!msg) return;
-  try {
-    await fetch(`${BASE_URL}?action=sendMessage&channel=${encodeURIComponent(currentChannel)}&sender=${encodeURIComponent(currentUser)}&message=${encodeURIComponent(msg)}`);
-    msgInput.value = "";
-    await loadMessages();
-  } catch(err){
-    console.error(err);
-    statusMsg.textContent = "Error sending message.";
-  }
-}
-
-// ===== UPLOAD IMAGE =====
-document.getElementById("imageInput").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if(!file) return;
-
-  if(file.size > 5*1024*1024){
-    statusMsg.textContent = "File too big!";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = async function(){
-    const base64 = reader.result.split(",")[1];
-    try {
-      const formData = new FormData();
-      formData.append("action", "uploadImage");
-      formData.append("channel", currentChannel);
-      formData.append("sender", currentUser);
-      formData.append("file", base64);
-
-      const res = await fetch(BASE_URL, { method: "POST", body: formData });
-      const json = await res.json();
-
-      if(json.success){
-        statusMsg.textContent = "Image uploaded!";
-        await loadMessages();
-      } else {
-        statusMsg.textContent = "Upload failed: " + json.error;
-      }
-    } catch(err){
-      console.error(err);
-      statusMsg.textContent = "Upload error";
-    }
-  };
-  reader.readAsDataURL(file);
-});
-</script>
-
+    <script src="yes.js"></script>
 </body>
 </html>
