@@ -161,12 +161,29 @@ document.addEventListener("DOMContentLoaded", () => {
             bossUI.style.display = "none";
             const count = 6 + (wave * 2);
             for (let i = 0; i < count; i++) {
-                let hp, speed, r, color;
+                let hp, speed, r, color, x, y;
                 let roll = Math.random();
                 if (wave >= 5 && roll < 0.15) { hp = 30 + wave * 15; speed = 1.2; r = 25; color = "#4a0000"; } 
                 else if (wave >= 10 && roll > 0.85) { hp = 5 + wave * 3; speed = 3.5 + (Math.random() * 1); r = 10; color = "cyan"; } 
                 else { hp = 10 + wave * 7; speed = 1.92 + (Math.random() * 0.64); r = 15; color = "red"; }
-                enemies.push({ x: Math.random() * canvas.width, y: -50 - (Math.random() * 200), r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0 });
+                
+                // Spawn from all sides
+                const side = Math.floor(Math.random() * 4);
+                if (side === 0) { // Top
+                    x = Math.random() * canvas.width;
+                    y = -50 - (Math.random() * 100);
+                } else if (side === 1) { // Bottom
+                    x = Math.random() * canvas.width;
+                    y = canvas.height + 50 + (Math.random() * 100);
+                } else if (side === 2) { // Left
+                    x = -50 - (Math.random() * 100);
+                    y = Math.random() * canvas.height;
+                } else { // Right
+                    x = canvas.width + 50 + (Math.random() * 100);
+                    y = Math.random() * canvas.height;
+                }
+                
+                enemies.push({ x, y, r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0 });
             }
         }
     }
