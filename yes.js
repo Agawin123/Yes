@@ -182,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     x = canvas.width + 50 + (Math.random() * 100);
                     y = Math.random() * canvas.height;
                 }
+                console.log(`Spawning enemy - Side: ${side}, X: ${x}, Y: ${y}, Canvas: ${canvas.width}x${canvas.height}`);
                 
                 enemies.push({ x, y, r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0 });
             }
