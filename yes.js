@@ -150,7 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function spawnWave() {
-        if (wave % 20 === 0) {
+        // Boss spawning: wave 20, 80, 120, then every 40 waves after that
+        const isBossWave = wave === 20 || wave === 80 || (wave >= 120 && (wave - 120) % 40 === 0);
+        
+        if (isBossWave) {
             enemies.push({ 
                 x: canvas.width/2, y: -100, r: 50, hp: 800 + (wave * 100), maxHp: 800 + (wave * 100), 
                 speed: 1.28, isBoss: true, flash: 0, lastDash: performance.now(), dashing: false, dashTimer: 0,
@@ -182,7 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     x = canvas.width + 50 + (Math.random() * 100);
                     y = Math.random() * canvas.height;
                 }
-                console.log(`Spawning enemy - Side: ${side}, X: ${x}, Y: ${y}, Canvas: ${canvas.width}x${canvas.height}`);
                 
                 enemies.push({ x, y, r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0 });
             }
