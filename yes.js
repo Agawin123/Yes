@@ -165,6 +165,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateHUD() {
+        // Update stats text
+        document.getElementById("stats").innerText = `WAVE: ${wave} | LVL: ${player.level}`;
+        
+        // Update HP bar
+        const hpPct = (player.hp / player.maxHp) * 100;
+        document.getElementById("hpFill").style.width = hpPct + "%";
+        
+        // Update EXP bar
+        const expPct = (player.exp / player.nextExp) * 100;
+        document.getElementById("expFill").style.width = expPct + "%";
+        
+        // Update cooldown HUD
         let html = "";
         if (player.dashAbility) {
             let pct = (player.dashCD / player.dashMaxCD) * 100;
