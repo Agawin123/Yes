@@ -37,12 +37,15 @@
         button:hover { background: #ff3385; transform: translateY(-2px); }
 
         /* HUD & Progress Bars */
-        #hud { position: fixed; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+        #hud { position: fixed; top: 20px; left: 20px; z-index: 10; pointer-events: none; background: rgba(0, 0, 0, 0.6); padding: 15px; border-radius: 10px; border: 2px solid #ff0066; }
+        #stats { font-size: 16px; font-weight: bold; color: #00ccff; margin-bottom: 10px; }
+        .bar-container { display: flex; gap: 5px; align-items: center; margin-bottom: 10px; }
+        .bar-label { color: #888; font-size: 12px; min-width: 35px; }
         .bar-bg {
-            width: 200px; height: 12px; background: #333;
-            margin-bottom: 8px; border-radius: 6px; overflow: hidden; border: 1px solid #555;
+            width: 250px; height: 18px; background: #1a1a1a;
+            border-radius: 8px; overflow: hidden; border: 2px solid #555;
         }
-        .bar-fill { height: 100%; transition: width 0.3s ease-out; }
+        .bar-fill { height: 100%; transition: width 0.15s ease-out; }
 
         /* Ability HUD */
         #cooldownHUD { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 12px; z-index: 10; }
@@ -88,9 +91,15 @@
     <canvas id="game"></canvas>
 
     <div id="hud">
-        <div id="stats" style="font-size: 18px; margin-bottom: 5px;">WAVE: 1 | LVL: 1</div>
-        <div class="bar-bg"><div id="hpFill" class="bar-fill" style="background: #ff0066; width: 100%;"></div></div>
-        <div class="bar-bg"><div id="expFill" class="bar-fill" style="background: #00ccff; width: 0%;"></div></div>
+        <div id="stats" style="">WAVE: 1 | LVL: 1</div>
+        <div class="bar-container">
+            <div class="bar-label">HP</div>
+            <div class="bar-bg"><div id="hpFill" class="bar-fill" style="background: #ff0066; width: 100%;"></div></div>
+        </div>
+        <div class="bar-container">
+            <div class="bar-label">EXP</div>
+            <div class="bar-bg"><div id="expFill" class="bar-fill" style="background: #00ccff; width: 0%;"></div></div>
+        </div>
     </div>
 
     <div id="bossUI" style="display:none; position: fixed; top: 20px; width: 100%; text-align: center; z-index: 10;">
