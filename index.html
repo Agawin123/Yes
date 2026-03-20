@@ -45,7 +45,9 @@
             width: 250px; height: 18px; background: #1a1a1a;
             border-radius: 8px; overflow: hidden; border: 2px solid #555;
         }
-        .bar-fill { height: 100%; transition: width 0.15s ease-out; }
+        .bar-fill { height: 100%; transition: width 0.05s ease-out; }
+        #hud.damaged { animation: damageFlash 0.3s ease-out; }
+        @keyframes damageFlash { 0% { background: rgba(255, 0, 102, 0.3); } 100% { background: rgba(0, 0, 0, 0.6); } }
 
         /* Ability HUD */
         #cooldownHUD { position: fixed; bottom: 20px; left: 20px; display: flex; gap: 12px; z-index: 10; }
