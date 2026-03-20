@@ -107,12 +107,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("keydown", (e) => { 
         if (e.key === "Escape") { togglePause(); return; }
-        keys[e.key.toLowerCase()] = true; 
-        inputBuffer += e.key.toLowerCase();
+        let keyName = e.key.toLowerCase();
+        // Handle arrow keys - store them without the "arrow" prefix for easier checking
+        if (e.key.startsWith("Arrow")) keyName = "arrow" + e.key.substring(5).toLowerCase();
+        keys[keyName] = true; 
+        inputBuffer += keyName;
         if (inputBuffer.slice(-6) === "tyuiop") { document.getElementById("devMenu").style.display = "block"; populateCheatMenu(); inputBuffer = ""; }
-        if (e.key.toLowerCase() === "q") { manualMarker = { x: mouse.x, y: mouse.y }; spawnSpark(mouse.x, mouse.y, "#ff00ff"); }
+        if (keyName === "q") { manualMarker = { x: mouse.x, y: mouse.y }; spawnSpark(mouse.x, mouse.y, "#ff00ff"); }
     });
-    window.addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
+    window.addEventListener("keyup", (e) => { 
+        let keyName = e.key.toLowerCase();
+        if (e.key.startsWith("Arrow")) keyName = "arrow" + e.key.substring(5).toLowerCase();
+        keys[keyName] = false; 
+    });
     window.addEventListener("mousemove", (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
     window.addEventListener("mousedown", () => { mouse.down = true; });
     window.addEventListener("mouseup", () => { mouse.down = false; });
