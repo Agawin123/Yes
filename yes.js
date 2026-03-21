@@ -314,8 +314,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     laser.dead = true;
                 }
             }
-            // Damage player if in orange phase (up to 2 hits per laser, with 1s cooldown)
-            if (laser.phase === 'orange' && laser.hitCount < 2 && (laser.hitCount === 0 || t - laser.lastHitTime > 1000)) {
+            // Damage player if in orange phase (unlimited hits with 1s cooldown)
+            if (laser.phase === 'orange' && (laser.hitCount === 0 || t - laser.lastHitTime > 1000)) {
                 const dx = laser.x2 - laser.x1;
                 const dy = laser.y2 - laser.y1;
                 const len = Math.hypot(dx, dy);
