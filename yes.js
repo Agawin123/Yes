@@ -150,8 +150,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function spawnWave() {
-        // Boss spawning: wave 20, 80, 120, then every 40 waves after that
-        const isBossWave = wave === 20 || wave === 80 || (wave >= 120 && (wave - 120) % 40 === 0);
+        // Boss spawning: wave 25, 75, 125, 175, then every 50 waves after that
+        const isBossWave = (wave >= 25 && (wave - 25) % 50 === 0);
         
         if (isBossWave) {
             enemies.push({ 
