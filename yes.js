@@ -433,17 +433,11 @@ document.addEventListener("DOMContentLoaded", () => {
             let s = (slowActive ? e.speed * 0.5 : e.speed);
             if(e.isBoss) {
                 bossBarFill.style.width = (e.hp / e.maxHp) * 100 + "%";
-                // Update boss type label and preserve boss health bar
-                let bossTypeLabel = bossUI.querySelector('.bossTypeLabel');
-                if (!bossTypeLabel) {
-                    bossTypeLabel = document.createElement('div');
-                    bossTypeLabel.className = 'bossTypeLabel';
-                    bossTypeLabel.style.color = '#fff';
-                    bossTypeLabel.style.fontWeight = 'bold';
-                    bossTypeLabel.style.marginBottom = '4px';
-                    bossUI.insertBefore(bossTypeLabel, bossBarFill);
+                // Update boss type label text (keeps health bar intact)
+                const bossTypeLabel = document.getElementById('bossTypeLabel');
+                if (bossTypeLabel) {
+                    bossTypeLabel.innerText = e.bossType === 'super' ? 'SUPER' : 'ELITE';
                 }
-                bossTypeLabel.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
                 // Laser attack for every-50-wave bosses
                 if (e.hasLaserAttack && t - e.lastLaserShot > e.laserCooldown) {
                     const angle = Math.atan2(player.y - e.y, player.x - e.x);
@@ -454,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     e.lastLaserShot = t;
                 }
                 if (!e.dashing && t - e.lastDash > 5000) { e.dashing = true; e.dashTimer = 20; e.lastDash = t; const dist = Math.hypot(player.x - e.x, player.y - e.y); e.dashVX = ((player.x - e.x) / dist) * 25; e.dashVY = ((player.y - e.y) / dist) * 25; }
-                if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; if (e.hp < e.maxHp / 2) { for(let i=0; i<12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000 }); } } } }
+                if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; for (let i = 0; i < 12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000 }); } } }
                 else { const d = Math.hypot(player.x - e.x, player.y - e.y); e.x += (player.x - e.x) / d * s; e.y += (player.y - e.y) / d * s; }
             } else {
                 const d = Math.hypot(player.x - e.x, player.y - e.y); e.x += (player.x - e.x) / d * s; e.y += (player.y - e.y) / d * s;
