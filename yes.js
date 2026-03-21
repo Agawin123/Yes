@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let lastHitPos = { x: 0, y: 0 }, manualMarker = null;
     let enemies = [], bullets = [], expOrbs = [], particles = [], shocks = [], boomerangs = [], enemyBullets = [];
     let molotovs = []; 
+    let lasers = [];
     let godMode = false;
 
     const playerInventory = {};
@@ -150,22 +151,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function spawnWave() {
-        // Boss spawning: wave 25, 75, 125, 175, then every 50 waves after that
-        const isBossWave = (wave >= 25 && (wave - 25) % 50 === 0);
+        // Boss spawning: every 25 waves
+        const isBossWave = (wave >= 25 && wave % 25 === 0);
+        const hasLaserAttack = (wave % 50 === 0);
+        const isSuperBoss = (wave % 50 === 0);
         
         if (isBossWave) {
             let bossHp;
-            if (lastBossHp > 0) {
-                bossHp = Math.floor(lastBossHp * 1.5);
+            const normalBossHp = 800 + (wave * 100);
+            
+            if (isSuperBoss) {
+                // Super bosses have 50% more health
+                bossHp = Math.floor(normalBossHp * 1.5);
             } else {
-                bossHp = 800 + (wave * 100);
+                // Elite bosses scale off previous boss
+                if (lastBossHp > 0) {
+                    bossHp = Math.floor(lastBossHp * 1.5);
+                } else {
+                    bossHp = normalBossHp;
+                }
             }
             lastBossHp = bossHp;
             enemies.push({ 
                 x: canvas.width/2, y: -100, r: 50, hp: bossHp, maxHp: bossHp, 
                 speed: 1.28, isBoss: true, flash: 0, lastDash: performance.now(), dashing: false, dashTimer: 0,
                 burnTimer: 0, lastBurnTick: 0, burnCooldown: 0,
-                lastHomingShot: performance.now(), homingActiveUntil: 0
+                hasLaserAttack: hasLaserAttack, lastLaserShot: performance.now(), laserCooldown: 3000,
+                bossType: isSuperBoss ? 'super' : 'elite'
             });
             bossUI.style.display = "block";
         } else {
@@ -291,6 +303,36 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         molotovs = molotovs.filter(m => m.life > 0);
 
+        // Update and manage lasers
+        lasers.forEach(laser => {
+            laser.timer -= 16.6;
+            if (laser.timer <= 0) {
+                if (laser.phase === 'red') {
+                    laser.phase = 'orange';
+                    laser.timer = 10000; // Stays active for 10 more seconds
+                } else {
+                    laser.dead = true;
+                }
+            }
+            // Damage player if in orange phase (only once)
+            if (laser.phase === 'orange' && !laser.hasHitPlayer) {
+                const dx = laser.x2 - laser.x1;
+                const dy = laser.y2 - laser.y1;
+                const len = Math.hypot(dx, dy);
+                const ux = dx / len, uy = dy / len;
+                const px = player.x - laser.x1, py = player.y - laser.y1;
+                const proj = px * ux + py * uy;
+                if (proj >= 0 && proj <= len) {
+                    const dist = Math.abs(px * uy - py * ux);
+                    if (dist < laser.width) {
+                        player.hp -= laser.damage;
+                        laser.hasHitPlayer = true;
+                    }
+                }
+            }
+        });
+        lasers = lasers.filter(l => !l.dead);
+
         enemies.forEach(e => {
             if (e.burnTimer > 0) {
                 e.burnTimer -= 16.6;
@@ -391,13 +433,21 @@ document.addEventListener("DOMContentLoaded", () => {
             let s = (slowActive ? e.speed * 0.5 : e.speed);
             if(e.isBoss) {
                 bossBarFill.style.width = (e.hp / e.maxHp) * 100 + "%";
-                if (t - e.lastHomingShot >= 10000) {
-                    e.lastHomingShot = t;
-                    e.homingActiveUntil = t + 5000;
-                    for (let i = 0; i < 5; i++) {
-                        const angle = (Math.PI * 2 / 5) * i;
-                        enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle) * 2.5, vy: Math.sin(angle) * 2.5, homing: true, life: 5000 });
-                    }
+                // Update boss type label
+                const bossTypeLabel = bossUI.querySelector('.bossTypeLabel') || document.querySelector('[data-boss-type]');
+                if (bossTypeLabel) {
+                    bossTypeLabel.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
+                } else {
+                    bossUI.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
+                }
+                // Laser attack for every-50-wave bosses
+                if (e.hasLaserAttack && t - e.lastLaserShot > e.laserCooldown) {
+                    const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    const maxDist = Math.max(canvas.width, canvas.height) * 2;
+                    const x2 = e.x + Math.cos(angle) * maxDist;
+                    const y2 = e.y + Math.sin(angle) * maxDist;
+                    lasers.push({ x1: e.x, y1: e.y, x2: x2, y2: y2, phase: 'red', timer: 2000, width: 30, damage: 50, hasHitPlayer: false });
+                    e.lastLaserShot = t;
                 }
                 if (!e.dashing && t - e.lastDash > 5000) { e.dashing = true; e.dashTimer = 20; e.lastDash = t; const dist = Math.hypot(player.x - e.x, player.y - e.y); e.dashVX = ((player.x - e.x) / dist) * 25; e.dashVY = ((player.y - e.y) / dist) * 25; }
                 if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; if (e.hp < e.maxHp / 2) { for(let i=0; i<12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000 }); } } } }
@@ -450,6 +500,17 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         ctx.fillStyle = "lime"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+        
+        // Draw lasers
+        lasers.forEach(laser => {
+            ctx.strokeStyle = laser.phase === 'red' ? 'rgba(255, 0, 0, 0.6)' : 'rgba(255, 165, 0, 0.6)';
+            ctx.lineWidth = laser.width;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(laser.x1, laser.y1);
+            ctx.lineTo(laser.x2, laser.y2);
+            ctx.stroke();
+        });
     }
 
     function applyUpgrade(upg) { upg.f(); playerInventory[upg.t] = (playerInventory[upg.t] || 0) + 1; }
