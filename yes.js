@@ -154,10 +154,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const isBossWave = (wave >= 25 && (wave - 25) % 50 === 0);
         
         if (isBossWave) {
+            let bossHp;
+            if (lastBossHp > 0) {
+                bossHp = Math.floor(lastBossHp * 1.5);
+            } else {
+                bossHp = 800 + (wave * 100);
+            }
+            lastBossHp = bossHp;
             enemies.push({ 
-                x: canvas.width/2, y: -100, r: 50, hp: 800 + (wave * 100), maxHp: 800 + (wave * 100), 
+                x: canvas.width/2, y: -100, r: 50, hp: bossHp, maxHp: bossHp, 
                 speed: 1.28, isBoss: true, flash: 0, lastDash: performance.now(), dashing: false, dashTimer: 0,
-                burnTimer: 0, lastBurnTick: 0, burnCooldown: 0
+                burnTimer: 0, lastBurnTick: 0, burnCooldown: 0,
+                lastHomingShot: performance.now(), homingActiveUntil: 0
             });
             bossUI.style.display = "block";
         } else {
@@ -192,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let lastHp = player.maxHp;
+    let lastBossHp = 0;
     
     function updateHUD() {
         // Update stats text
@@ -382,6 +391,14 @@ document.addEventListener("DOMContentLoaded", () => {
             let s = (slowActive ? e.speed * 0.5 : e.speed);
             if(e.isBoss) {
                 bossBarFill.style.width = (e.hp / e.maxHp) * 100 + "%";
+                if (t - e.lastHomingShot >= 10000) {
+                    e.lastHomingShot = t;
+                    e.homingActiveUntil = t + 5000;
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 / 5) * i;
+                        enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle) * 2.5, vy: Math.sin(angle) * 2.5, homing: true, life: 5000 });
+                    }
+                }
                 if (!e.dashing && t - e.lastDash > 5000) { e.dashing = true; e.dashTimer = 20; e.lastDash = t; const dist = Math.hypot(player.x - e.x, player.y - e.y); e.dashVX = ((player.x - e.x) / dist) * 25; e.dashVY = ((player.y - e.y) / dist) * 25; }
                 if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; if (e.hp < e.maxHp / 2) { for(let i=0; i<12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000 }); } } } }
                 else { const d = Math.hypot(player.x - e.x, player.y - e.y); e.x += (player.x - e.x) / d * s; e.y += (player.y - e.y) / d * s; }
