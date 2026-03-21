@@ -433,13 +433,17 @@ document.addEventListener("DOMContentLoaded", () => {
             let s = (slowActive ? e.speed * 0.5 : e.speed);
             if(e.isBoss) {
                 bossBarFill.style.width = (e.hp / e.maxHp) * 100 + "%";
-                // Update boss type label
-                const bossTypeLabel = bossUI.querySelector('.bossTypeLabel') || document.querySelector('[data-boss-type]');
-                if (bossTypeLabel) {
-                    bossTypeLabel.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
-                } else {
-                    bossUI.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
+                // Update boss type label and preserve boss health bar
+                let bossTypeLabel = bossUI.querySelector('.bossTypeLabel');
+                if (!bossTypeLabel) {
+                    bossTypeLabel = document.createElement('div');
+                    bossTypeLabel.className = 'bossTypeLabel';
+                    bossTypeLabel.style.color = '#fff';
+                    bossTypeLabel.style.fontWeight = 'bold';
+                    bossTypeLabel.style.marginBottom = '4px';
+                    bossUI.insertBefore(bossTypeLabel, bossBarFill);
                 }
+                bossTypeLabel.innerText = e.bossType ? e.bossType.toUpperCase() : 'ELITE';
                 // Laser attack for every-50-wave bosses
                 if (e.hasLaserAttack && t - e.lastLaserShot > e.laserCooldown) {
                     const angle = Math.atan2(player.y - e.y, player.x - e.x);
