@@ -314,8 +314,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     laser.dead = true;
                 }
             }
-            // Damage player if in orange phase (only once)
-            if (laser.phase === 'orange' && !laser.hasHitPlayer) {
+            // Damage player if in orange phase (up to 2 hits per laser, with 1s cooldown)
+            if (laser.phase === 'orange' && laser.hitCount < 2 && (laser.hitCount === 0 || t - laser.lastHitTime > 1000)) {
                 const dx = laser.x2 - laser.x1;
                 const dy = laser.y2 - laser.y1;
                 const len = Math.hypot(dx, dy);
@@ -326,7 +326,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const dist = Math.abs(px * uy - py * ux);
                     if (dist < laser.width) {
                         player.hp -= laser.damage;
-                        laser.hasHitPlayer = true;
+                        laser.hitCount++;
+                        laser.lastHitTime = t;
                     }
                 }
             }
@@ -444,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const maxDist = Math.max(canvas.width, canvas.height) * 2;
                     const x2 = e.x + Math.cos(angle) * maxDist;
                     const y2 = e.y + Math.sin(angle) * maxDist;
-                    lasers.push({ x1: e.x, y1: e.y, x2: x2, y2: y2, phase: 'red', timer: 2000, width: 30, damage: 50, hasHitPlayer: false });
+                    lasers.push({ x1: e.x, y1: e.y, x2: x2, y2: y2, phase: 'red', timer: 2000, width: 30, damage: 50, hitCount: 0, lastHitTime: 0 });
                     e.lastLaserShot = t;
                 }
                 if (!e.dashing && t - e.lastDash > 5000) { e.dashing = true; e.dashTimer = 20; e.lastDash = t; const dist = Math.hypot(player.x - e.x, player.y - e.y); e.dashVX = ((player.x - e.x) / dist) * 25; e.dashVY = ((player.y - e.y) / dist) * 25; }
