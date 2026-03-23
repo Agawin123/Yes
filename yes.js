@@ -184,9 +184,10 @@ document.addEventListener("DOMContentLoaded", () => {
             bossUI.style.display = "none";
             const count = 6 + (wave * 2);
             for (let i = 0; i < count; i++) {
-                let hp, speed, r, color, x, y;
+                let hp, speed, r, color, x, y, isRanged = false;
                 let roll = Math.random();
-                if (wave >= 5 && roll < 0.15) { hp = 30 + wave * 15; speed = 1.2; r = 25; color = "#4a0000"; } 
+                if (wave >= 12 && roll < 0.1) { hp = Math.floor((10 + wave * 7) * 0.5); speed = 1.2 * 0.95; r = 15; color = "purple"; isRanged = true; } 
+                else if (wave >= 5 && roll < 0.25) { hp = 30 + wave * 15; speed = 1.2; r = 25; color = "#4a0000"; } 
                 else if (wave >= 10 && roll > 0.85) { hp = 5 + wave * 3; speed = 3.5 + (Math.random() * 1); r = 10; color = "cyan"; } 
                 else { hp = 10 + wave * 7; speed = 1.92 + (Math.random() * 0.64); r = 15; color = "red"; }
                 
@@ -206,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     y = Math.random() * canvas.height;
                 }
                 
-                enemies.push({ x, y, r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0 });
+                enemies.push({ x, y, r: r, hp: hp, maxHp: hp, speed: speed, flash: 0, color: color, burnTimer: 0, lastBurnTick: 0, burnCooldown: 0, isRanged: isRanged, lastShot: isRanged ? performance.now() : 0 });
             }
         }
     }
@@ -449,9 +450,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     e.lastLaserShot = t;
                 }
                 if (!e.dashing && t - e.lastDash > 5000) { e.dashing = true; e.dashTimer = 20; e.lastDash = t; const dist = Math.hypot(player.x - e.x, player.y - e.y); e.dashVX = ((player.x - e.x) / dist) * 25; e.dashVY = ((player.y - e.y) / dist) * 25; }
-                if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; for (let i = 0; i < 12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000 }); } } }
+                if (e.dashing) { e.x += e.dashVX; e.y += e.dashVY; e.dashTimer--; if (e.dashTimer <= 0) { e.dashing = false; for (let i = 0; i < 12; i++) { const angle = (Math.PI*2/12)*i; enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*5, vy: Math.sin(angle)*5, homing: false, life: 3000, radius: 5 }); } } }
                 else { const d = Math.hypot(player.x - e.x, player.y - e.y); e.x += (player.x - e.x) / d * s; e.y += (player.y - e.y) / d * s; }
             } else {
+                if (e.isRanged && t - e.lastShot > 2000) {
+                    const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                    enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(angle)*4.8, vy: Math.sin(angle)*4.8, homing: false, life: 3000, radius: 5.5 });
+                    e.lastShot = t;
+                }
                 const d = Math.hypot(player.x - e.x, player.y - e.y); e.x += (player.x - e.x) / d * s; e.y += (player.y - e.y) / d * s;
             }
             if (Math.hypot(player.x - e.x, player.y - e.y) < player.r + e.r) player.hp -= 0.5;
@@ -482,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
         shocks.forEach(s => { ctx.beginPath(); ctx.globalAlpha = s.life; if (s.isBolt) { ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.moveTo(s.x, s.y); ctx.lineTo(s.tx, s.ty); } else { ctx.strokeStyle = s.color; ctx.lineWidth = 4; ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); } ctx.stroke(); });
         ctx.globalAlpha = 1.0; ctx.fillStyle = "cyan"; expOrbs.forEach(o => { ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI*2); ctx.fill(); });
         bullets.forEach(b => { if (b.isAllInOne) ctx.fillStyle = `hsl(${Date.now() % 360}, 100%, 70%)`; else ctx.fillStyle = b.isTesla ? "yellow" : (b.isQuick ? "cyan" : (isLaser ? "#ff0066" : "yellow")); ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill(); });
-        enemyBullets.forEach(eb => { ctx.fillStyle = eb.homing ? "#aa00ff" : "#ff0000"; ctx.beginPath(); ctx.arc(eb.x, eb.y, 5, 0, Math.PI*2); ctx.fill(); });
+        enemyBullets.forEach(eb => { ctx.fillStyle = eb.homing ? "#aa00ff" : "#ff0000"; ctx.beginPath(); ctx.arc(eb.x, eb.y, eb.radius || 5, 0, Math.PI*2); ctx.fill(); });
         ctx.fillStyle = player.boomerangOrbit ? "gold" : "white"; boomerangs.forEach(b => { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Date.now() * 0.02); ctx.fillRect(-b.r, -b.r, b.r*2, b.r*2); ctx.restore(); });
         if (player.hasGuardian) { [0, Math.PI].forEach(offset => { const gx = player.x + Math.cos(player.guardianAngle + offset) * 90; const gy = player.y + Math.sin(player.guardianAngle + offset) * 90; ctx.beginPath(); ctx.fillStyle = "rgba(0, 255, 255, 0.3)"; ctx.arc(gx, gy, 12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.fillStyle = "#00ffff"; ctx.arc(gx, gy, 6, 0, Math.PI*2); ctx.fill(); }); }
         if (player.hasDrone) { ctx.save(); ctx.translate(player.droneX, player.droneY); ctx.rotate(Date.now()*0.005); ctx.fillStyle = "#ff00ff"; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, 7); ctx.lineTo(-7, -7); ctx.closePath(); ctx.fill(); ctx.restore(); }
